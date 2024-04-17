@@ -1,12 +1,14 @@
 import sys
+import numpy as np
 from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QPushButton, QLineEdit, QLabel
 from PyQt5.QtGui import QColor, QPainter, QBrush
 from PyQt5.QtCore import Qt, QTimer
 
 class Square(QWidget):
-    def __init__(self):
+    def __init__(self, val = 0):
         super().__init__()
-        self.color = QColor('black')
+        self.value = val
+        self.color = QColor(val,val,val)
 
     def paintEvent(self, event):
         painter = QPainter()
@@ -22,30 +24,31 @@ class Square(QWidget):
             self.color = QColor('black')
         self.update()
 
+
 class Grid(QWidget):
-    def __init__(self, n=10):
+    def __init__(self, matrix):
         super().__init__()
-        self.n = n
+        self.n = len(matrix)
         self.grid_layout = QGridLayout()
         self.setLayout(self.grid_layout)
         self.squares = []
-        for i in range(n):
+        for i in range(self.n):
             row = []
-            for j in range(n):
-                square = Square()
+            for j in range(self.n):
+                square = Square(matrix[i][j])
                 self.grid_layout.addWidget(square, i, j)
                 row.append(square)
             self.squares.append(row)
 
-    def set_n(self, n):
-        self.n = n
+    def set_matrix(self, matrix):
+        self.n = len(matrix)
         for square in sum(self.squares, []):
             square.deleteLater()
         self.squares = []
-        for i in range(n):
+        for i in range(self.n):
             row = []
-            for j in range(n):
-                square = Square()
+            for j in range(self.n):
+                square = Square(matrix[i][j])
                 self.grid_layout.addWidget(square, i, j)
                 row.append(square)
             self.squares.append(row)
@@ -53,7 +56,10 @@ class Grid(QWidget):
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.grid = Grid()
+        self.n = 10
+        self.matrix = np.random.choice([0,1], self.n * self.n, p=[0.2, 0.8]).reshape(
+            self.n, self.n)
+        self.grid = Grid(self.matrix)
         self.grid_size_input = QLineEdit()
         self.grid_size_button = QPushButton('Set grid size')
         self.start_button = QPushButton('Start')
@@ -73,7 +79,8 @@ class MainWindow(QWidget):
 
     def set_grid_size(self):
         n = int(self.grid_size_input.text())
-        self.grid.set_n(n)
+        self.matrix = [[0]*n for _ in range(n)]
+        self.grid.set_matrix(self.matrix)
 
     def start_animation(self):
         if self.start_button.text() == 'Start':
